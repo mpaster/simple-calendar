@@ -1,0 +1,253 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>calendar</title>
+<style>
+ul{
+	/*margin:0;*/
+	padding:0;
+	list-style:none;
+}
+ul li{
+	border:1px #c90 solid;
+	height:30px;
+}
+.active_date{
+	background-color:#7CD43A;
+}
+.date_li{
+	float:left; 
+	width:98px;
+}
+.date_active_li{
+	float:left; 
+	width:98px; 
+	background-color:#C90;
+}
+</style>
+<script src="js/jQuery1.11.3.js"></script>
+<script>
+var bigMonth = new Array(1,3,5,7,8,10,12);
+var smallMonth = new Array(4,6,9,11);
+var weekArray = new Array("星期日","星期一","星期二","星期三","星期四","星期五","星期六");
+
+var time = new Date();
+
+$(document).ready(function(){
+	pinTimestamp();
+	countRTWeekOfFirst();
+	unfoldCalendar(countMonthSize(RTMonth), RTWeekOfFirst)
+})
+
+
+//时间格式
+//0,默认格式,"yyyy-MM-dd",如 "2015-12-04"
+//1,"yyyy/MM/dd",如 "2015/12/04"
+//2,"yyyy年MM月dd日",如 "2015年12月04日"
+var datePattern = 0;
+//此时此刻
+var nowYear = time.getFullYear();
+var nowMonth = time.getMonth()+1;
+var nowDay = time.getDate();
+var nowWeek = time.getDay();
+
+//全局变量，实时数据，RT(real-time)
+var RTYear = time.getFullYear();
+var RTMonth = time.getMonth()+1;
+var RTDay = time.getDate();
+var RTWeek = time.getDay();
+var RTWeekOfFirst = -1;//月份一号的星期几
+
+//展开日历
+function unfoldCalendar(monthSize, RTWeekOfFirst){
+	var daysUl = $("#days_ul");
+	daysUl.empty();//显示一月
+	for(var i = 0; i < monthSize; i++){
+		if(i==0){
+			for(var j = 0; j < weekArray.length; j++){
+				daysUl.append("<li class='date_li'>"+weekArray[j]+"</li>");
+			}
+			if(RTWeekOfFirst==0)
+				RTWeekOfFirst = 7;
+			for(var j = 0; j < RTWeekOfFirst; j++){
+				daysUl.append("<li class='date_li' id='front-"+(j+1)+"'></li>");
+			}
+			toolOfCalendar((i+1), "#days_ul");
+		}else{
+			toolOfCalendar((i+1), "#days_ul");
+			if(i==(monthSize-1)){
+				for(var j = 0; j < (42-monthSize-RTWeekOfFirst); j++){
+					daysUl.append("<li class='date_li' id='back-"+(j+1)+"'></li>");
+				}
+			}
+		}
+	}
+	daysUl.append("<div style='clear:both;'></div>");	
+}
+//工具方法，仅为了减少代码冗余
+function toolOfCalendar(index, id){
+	var ul = $(id);
+	if(RTYear==nowYear && RTMonth==nowMonth && index==nowDay){
+		ul.append("<li class='date_active_li' id='"+index+"' onclick='selectDate(this)' value='"+formateDate(index,datePattern)+"'>"+index+"</li>");
+	}else{
+		ul.append("<li class='date_li' id='"+index+"' onclick='selectDate(this)' value='"+formateDate(index,datePattern)+"'>"+index+"</li>");
+	}
+}
+//选择日期提取 value
+function selectDate(li){
+	var formateRTWeek;
+	$("#days_ul li").removeClass("active_date");
+	$(li).addClass("active_date");
+	RTDay = $(li).attr("id");
+	$("#NeedDate").val($(li).attr("value"));
+	pinTimestamp();
+}
+//格式化日期
+function formateDate(iDay, datePattern){
+	var formateRTMonth;
+	var formateRTDay;
+	
+	if(RTMonth < 10){
+		formateRTMonth = "0"+RTMonth;
+	}else{
+		formateRTMonth = RTMonth;
+	}
+	if(iDay < 10){
+		formateRTDay = "0"+iDay;
+	}else{
+		formateRTDay = iDay;
+	}
+	switch(datePattern){
+		case 1:
+			datePattern = RTYear+"/"+formateRTMonth+"/"+formateRTDay;
+			break;
+		case 2:
+			datePattern = RTYear+"年"+formateRTMonth+"月"+formateRTDay+"日";
+			break;
+		default:
+			datePattern = RTYear+"-"+formateRTMonth+"-"+formateRTDay;
+	}
+	return datePattern;
+}
+//回到今天
+function resetRTDate(){
+	RTYear = nowYear;
+	RTMonth = nowMonth;
+	RTDay = nowDay;
+	RTWeek = nowWeek;
+	
+	countRTWeekOfFirst();
+	unfoldCalendar(countMonthSize(RTMonth), RTWeekOfFirst)
+	pinTimestamp();
+}
+//上一月
+function previousStep(){
+	monthDecrease();
+	unfoldCalendar(countMonthSize(RTMonth), RTWeekOfFirst)
+	pinTimestamp();
+}
+//下一月
+function nextStep(){
+	monthIncrease();
+	unfoldCalendar(countMonthSize(RTMonth), RTWeekOfFirst)
+	pinTimestamp();
+}
+//时间戳
+function pinTimestamp(){
+	$("#currentDate").empty().append(formateDate(RTDay, 2));
+	//不显示今天的星期
+	//for(var i = 0; i < 7; i++){
+//		formateRTWeek = weekArray[RTWeek]
+//	}
+//	$("#currentWeek").empty().append(formateRTWeek);
+}
+//根据 RTDay 计算当月一号的星期几
+function countRTWeekOfFirst(){
+	var differCurrentRTWeek = RTWeek - (RTDay-1)%7;
+	if(differCurrentRTWeek >= 0){
+		RTWeekOfFirst = differCurrentRTWeek;
+	}else{
+		RTWeekOfFirst = differCurrentRTWeek + 7;
+	}
+}
+//月份递减，计算该月首日的星期
+function monthDecrease(){
+	//只许传入1-12前提下
+	if(RTMonth==1){
+		RTMonth = 12;
+		RTYear--;
+	}else{
+		RTMonth--;
+	}
+	//计算递减后月份一号的星期,（只可能余0,1,2,4）
+	var differRTWeek = (RTWeekOfFirst - countMonthSize(RTMonth)%7);
+	if(differRTWeek >= 0){
+		RTWeekOfFirst = differRTWeek;
+	}else{
+		RTWeekOfFirst = differRTWeek + 7;
+	}
+}
+//月份递加，计算该月首日的星期
+function monthIncrease(){
+	//计算递加后月份一号的星期,（只可能余0,1,2,4）
+	var differRTWeek = RTWeekOfFirst + countMonthSize(RTMonth)%7;
+	if(differRTWeek < 7){
+		RTWeekOfFirst = differRTWeek;
+	}else{
+		RTWeekOfFirst = differRTWeek - 7;
+	}
+	//只许传入1-12前提下
+	if(RTMonth==12){
+		RTMonth = 1;
+		RTYear++;
+	}else{
+		RTMonth++;
+	}
+}
+//判断月份天数，用到 jquery 的 $.inArray()方法
+function countMonthSize(month){
+	var monthSize = 0;
+	if($.inArray(month, bigMonth)>=0){
+		monthSize = 31;
+	}else if($.inArray(month, smallMonth)>=0){
+		monthSize = 30;
+	}else{
+		if(isLeapYear(RTYear)){
+			monthSize = 29;
+		}else{
+			monthSize = 28;
+		}
+	}
+	return monthSize;
+}
+//判断年份
+function isLeapYear(year){
+	if(year%100==0){
+		if(year%400==0){
+			return true;
+		}else{
+			return false;
+		}
+	}else if(year%4==0){
+		return true;
+	}else{
+		return false;
+	}
+}
+</script>
+</head>
+
+<body>
+
+<div id="u-calendar-container">
+	<div id="timestampContainer"><span id="currentDate"></span><span id="currentWeek"></span></div>
+	<ul id="days_ul" style="width:700px"></ul>
+	<input type="button" onclick="previousStep()" value="<<" />
+	<input type="button" onclick="resetRTDate()" value="OO" />
+	<input type="button" onclick="nextStep()" value=">>" />
+	<input type="text" id="NeedDate" />
+</div>
+
+</body>
+</html>
