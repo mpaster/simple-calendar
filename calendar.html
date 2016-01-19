@@ -41,12 +41,12 @@ $(document).ready(function(){
 })
 
 
-//时间格式
-//0,默认格式,"yyyy-MM-dd",如 "2015-12-04"
+// 
+// 0,default formate,"yyyy-MM-dd",如 "2015-12-04"
 //1,"yyyy/MM/dd",如 "2015/12/04"
 //2,"yyyy年MM月dd日",如 "2015年12月04日"
 var datePattern = 0;
-//此时此刻
+// now
 var nowYear = time.getFullYear();
 var nowMonth = time.getMonth()+1;
 var nowDay = time.getDate();
@@ -59,7 +59,7 @@ var RTDay = time.getDate();
 var RTWeek = time.getDay();
 var RTWeekOfFirst = -1;//月份一号的星期几
 
-//展开日历
+// unfold calendar
 function unfoldCalendar(monthSize, RTWeekOfFirst){
 	var daysUl = $("#days_ul");
 	daysUl.empty();//显示一月
@@ -130,7 +130,7 @@ function formateDate(iDay, datePattern){
 	}
 	return datePattern;
 }
-//回到今天
+// go back today
 function resetRTDate(){
 	RTYear = nowYear;
 	RTMonth = nowMonth;
@@ -141,19 +141,19 @@ function resetRTDate(){
 	unfoldCalendar(countMonthSize(RTMonth), RTWeekOfFirst)
 	pinTimestamp();
 }
-//上一月
+// last month
 function previousStep(){
 	monthDecrease();
 	unfoldCalendar(countMonthSize(RTMonth), RTWeekOfFirst)
 	pinTimestamp();
 }
-//下一月
+// next month
 function nextStep(){
 	monthIncrease();
 	unfoldCalendar(countMonthSize(RTMonth), RTWeekOfFirst)
 	pinTimestamp();
 }
-//时间戳
+// timestamp
 function pinTimestamp(){
 	$("#currentDate").empty().append(formateDate(RTDay, 2));
 	//不显示今天的星期
