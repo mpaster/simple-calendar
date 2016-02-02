@@ -1,2 +1,2 @@
-# simple-calendar
-a calendar plugin.just for study.
+# Simple-calendar
+It is a JavaScript calendar plug-in. Just for study.
